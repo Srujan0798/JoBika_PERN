@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JoBika - Land Your Dream Job in Minutes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .hero {
+            padding: 6rem 0;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .features {
+            padding: 4rem 0;
+            background: white;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: white;
+            font-size: 2rem;
+        }
+
+        .pricing {
+            padding: 4rem 0;
+            background: var(--gray-50);
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .pricing-card.featured {
+            border: 3px solid var(--primary-blue);
+            transform: scale(1.05);
+        }
+
+        .price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin: 1rem 0;
+        }
+
+        .price-features {
+            list-style: none;
+            margin: 2rem 0;
+            text-align: left;
+        }
+
+        .price-features li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .price-features li::before {
+            content: "✓";
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        nav {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity var(--transition-base);
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="container">
+            <a href="index.html" class="logo">JoBika</a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="auth.html" class="btn btn-primary" style="padding: 0.5rem 1.5rem;">Get Started</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Land Your Dream Job<br>in Minutes, Not Hours</h1>
+            <p>AI-powered resume optimization and auto-apply for the Indian job market</p>
+            <div class="flex-center" style="gap: 1rem;">
+                <a href="auth.html" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2rem;">Start Free
+                    Trial</a>
+                <a href="#features" class="btn btn-secondary"
+                    style="background: rgba(255,255,255,0.2); color: white; border: none;">Learn More</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="text-center" style="font-size: 2.5rem; margin-bottom: 3rem; font-family: var(--font-display);">
+                Why JoBika?</h2>
+            <div class="grid grid-3">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3 style="margin-bottom: 1rem;">AI Resume Builder</h3>
+                    <p style="color: var(--gray-600);">Upload your resume and let AI enhance it with industry best
+                        practices</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3 style="margin-bottom: 1rem;">Smart Job Matching</h3>
+                    <p style="color: var(--gray-600);">Get match scores and personalized learning recommendations</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 style="margin-bottom: 1rem;">Auto-Apply</h3>
+                    <p style="color: var(--gray-600);">AI finds jobs, customizes your resume, and applies automatically
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3 style="margin-bottom: 1rem;">Application Tracker</h3>
+                    <p style="color: var(--gray-600);">Track all applications in one dashboard with real-time updates
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🇮🇳</div>
+                    <h3 style="margin-bottom: 1rem;">Indian Market Focus</h3>
+                    <p style="color: var(--gray-600);">Aggregates jobs from LinkedIn, Naukri, Unstop, and more</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⏱️</div>
+                    <h3 style="margin-bottom: 1rem;">Save 95% Time</h3>
+                    <p style="color: var(--gray-600);">Reduce application time from 1 hour to 2-5 minutes</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <h2 class="text-center" style="font-size: 2.5rem; margin-bottom: 3rem; font-family: var(--font-display);">
+                Simple, Transparent Pricing</h2>
+            <div class="grid grid-3">
+                <div class="pricing-card">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Free</h3>
+                    <div class="price">₹0<span style="font-size: 1rem; color: var(--gray-600);">/month</span></div>
+                    <ul class="price-features">
+                        <li>5 applications/month</li>
+                        <li>Basic resume enhancement</li>
+                        <li>Job search & filtering</li>
+                        <li>Manual applications</li>
+                    </ul>
+                    <a href="auth.html" class="btn btn-secondary" style="width: 100%;">Get Started</a>
+                </div>
+
+                <div class="pricing-card featured">
+                    <div
+                        style="background: var(--primary-blue); color: white; padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600;">
+                        Most Popular</div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Pro</h3>
+                    <div class="price">₹499<span style="font-size: 1rem; color: var(--gray-600);">/month</span></div>
+                    <ul class="price-features">
+                        <li>50 applications/month</li>
+                        <li>AI resume optimization</li>
+                        <li>Auto-apply feature</li>
+                        <li>Cover letter generation</li>
+                        <li>Analytics dashboard</li>
+                    </ul>
+                    <a href="auth.html" class="btn btn-primary" style="width: 100%;">Start Free Trial</a>
+                </div>
+
+                <div class="pricing-card">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Enterprise</h3>
+                    <div class="price">₹999<span style="font-size: 1rem; color: var(--gray-600);">/month</span></div>
+                    <ul class="price-features">
+                        <li>Unlimited applications</li>
+                        <li>Priority support</li>
+                        <li>Team features</li>
+                        <li>Custom integrations</li>
+                        <li>Dedicated account manager</li>
+                    </ul>
+                    <a href="auth.html" class="btn btn-secondary" style="width: 100%;">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer style="background: var(--gray-900); color: white; padding: 3rem 0; text-align: center;">
+        <div class="container">
+            <p>&copy; 2025 JoBika. All rights reserved.</p>
+            <p style="margin-top: 1rem; color: var(--gray-400);">Made with ❤️ for Indian job seekers</p>
+        </div>
+    </footer>
+</body>
+
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Resume - JoBika</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family:Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <style>
+        body {
+            background: var(--gray-50);
+        }
+
+        .upload-container {
+            max-width: 1000px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+        }
+
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gray-300);
+            z-index: 0;
+        }
+
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--gray-300);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--gray-500);
+        }
+
+        .step-circle.active {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: white;
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--gray-300);
+            border-radius: 1rem;
+            padding: 4rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            background: white;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--primary-blue);
+            background: var(--gray-50);
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--primary-blue);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .upload-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+        }
+
+        .preview-section {
+            display: none;
+            margin-top: 2rem;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .preview-section.active {
+            display: grid;
+        }
+
+        .preview-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-card h3 {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preview-content {
+            background: var(--gray-50);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .highlight {
+            background: rgba(34, 197, 94, 0.2);
+            padding: 0 0.25rem;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="upload-container">
+        <div class="progress-bar">
+            <div class="progress-step">
+                <div class="step-circle active">1</div>
+                <span style="font-size: 0.875rem; font-weight: 500;">Upload</span>
+            </div>
+            <div class="progress-step">
+                <div class="step-circle">2</div>
+                <span style="font-size: 0.875rem; color: var(--gray-500);">Enhance</span>
+            </div>
+            <div class="progress-step">
+                <div class="step-circle">3</div>
+                <span style="font-size: 0.875rem; color: var(--gray-500);">Complete</span>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 0;">
+            <div style="padding: 2rem; border-bottom: 1px solid var(--gray-200);">
+                <h1 style="font-family: var(--font-display); font-size: 2rem; margin-bottom: 0.5rem;">Upload Your Resume
+                </h1>
+                <p style="color: var(--gray-600);">Let our AI analyze and enhance your resume for better job matches</p>
+            </div>
+
+            <div style="padding: 2rem;">
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">📄</div>
+                    <h3 style="margin-bottom: 0.5rem;">Drag your resume here or click to browse</h3>
+                    <p style="color: var(--gray-600); margin-bottom: 1rem;">Supported formats: PDF, DOCX (Max 5MB)</p>
+                    <input type="file" id="fileInput" accept=".pdf,.docx" style="display: none;">
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">Choose
+                        File</button>
+                </div>
+
+                <div class="preview-section" id="previewSection">
+                    <div class="preview-card">
+                        <h3>
+                            <span style="color: var(--gray-600);">📋</span>
+                            Original Resume
+                        </h3>
+                        <div class="preview-content" id="originalPreview">
+                            <p><strong>John Doe</strong></p>
+                            <p>Software Developer</p>
+                            <p>Email: john@example.com | Phone: +91 98765 43210</p>
+                            <br>
+                            <p><strong>EXPERIENCE</strong></p>
+                            <p>Software Developer at TechCorp (2022-Present)</p>
+                            <p>- Worked on web applications</p>
+                            <p>- Used React and Node.js</p>
+                            <br>
+                            <p><strong>SKILLS</strong></p>
+                            <p>JavaScript, React, Node.js, HTML, CSS</p>
+                        </div>
+                    </div>
+
+                    <div class="preview-card">
+                        <h3>
+                            <span style="color: var(--success);">✨</span>
+                            AI-Enhanced Resume
+                        </h3>
+                        <div class="preview-content" id="enhancedPreview">
+                            <p><strong>John Doe</strong></p>
+                            <p><span class="highlight">Full-Stack Software Engineer</span></p>
+                            <p>Email: john@example.com | Phone: +91 98765 43210 | <span class="highlight">LinkedIn:
+                                    linkedin.com/in/johndoe</span></p>
+                            <br>
+                            <p><strong>PROFESSIONAL EXPERIENCE</strong></p>
+                            <p><span class="highlight">Full-Stack Software Engineer</span> at TechCorp (2022-Present)
+                            </p>
+                            <p>- <span class="highlight">Architected and developed</span> scalable web applications
+                                <span class="highlight">serving 10,000+ users</span></p>
+                            <p>- <span class="highlight">Implemented RESTful APIs</span> using React and Node.js, <span
+                                    class="highlight">improving performance by 40%</span></p>
+                            <p>- <span class="highlight">Collaborated with cross-functional teams</span> to deliver
+                                features on time</p>
+                            <br>
+                            <p><strong>TECHNICAL SKILLS</strong></p>
+                            <p><span class="highlight">Languages:</span> JavaScript (ES6+), TypeScript, HTML5, CSS3</p>
+                            <p><span class="highlight">Frameworks:</span> React.js, Node.js, Express.js</p>
+                            <p><span class="highlight">Tools:</span> Git, Docker, AWS</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; text-align: center; display: none;" id="actionButtons">
+                    <button class="btn btn-primary" onclick="acceptEnhancements()">Accept Enhancements</button>
+                    <button class="btn btn-secondary" onclick="skipEnhancements()">Use Original</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const previewSection = document.getElementById('previewSection');
+        const actionButtons = document.getElementById('actionButtons');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            handleFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            handleFile(file);
+        });
+
+        function handleFile(file) {
+            if (file) {
+                uploadZone.innerHTML = `
+                    <div class="spinner"></div>
+                    <p style="margin-top: 1rem;">Analyzing your resume...</p>
+                `;
+
+                setTimeout(() => {
+                    uploadZone.style.display = 'none';
+                    previewSection.classList.add('active');
+                    actionButtons.style.display = 'block';
+                }, 2000);
+            }
+        }
+
+        function acceptEnhancements() {
+            localStorage.setItem('jobika_resume', JSON.stringify({
+                enhanced: true,
+                data: 'AI-enhanced resume data'
+            }));
+            window.location.href = 'dashboard.html';
+        }
+
+        function skipEnhancements() {
+            localStorage.setItem('jobika_resume', JSON.stringify({
+                enhanced: false,
+                data: 'Original resume data'
+            }));
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+
+</html>
