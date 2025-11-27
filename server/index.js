@@ -139,28 +139,30 @@ app.post('/api/auto-apply/trigger', async (req, res) => {
 
 const PORT = config.PORT;
 
-app.listen(PORT, () => {
-    console.log('');
-    console.log('╔════════════════════════════════════════╗');
-    console.log('║     🚀 JoBika Server Started! 🚀      ║');
-    console.log('╚════════════════════════════════════════╝');
-    console.log('');
-    console.log(`🌐 Server running on port ${PORT}`);
-    console.log(`📊 Environment: ${config.NODE_ENV}`);
-    console.log(`🗄️  Database: ${config.DATABASE_URL ? 'Supabase (PostgreSQL)' : 'Local PostgreSQL'}`);
-    console.log('');
-    console.log('✅ Features enabled:');
-    console.log('   - Resume parsing (PDF/DOCX)');
-    console.log('   - AI resume customization');
-    console.log('   - Skill gap analysis');
-    console.log('   - Job scraping (LinkedIn, Indeed, Naukri, Unstop)');
-    console.log('   - Auto-apply system (cron: daily at 9 AM)');
-    console.log('   - Email notifications');
-    console.log('   - 2FA authentication');
-    console.log('   - OAuth (Google, LinkedIn) - Configure in .env');
-    console.log('');
-    console.log(`📝 API Docs: http://localhost:${PORT}/api/health`);
-    console.log('');
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log('');
+        console.log('╔════════════════════════════════════════╗');
+        console.log('║     🚀 JoBika Server Started! 🚀      ║');
+        console.log('╚════════════════════════════════════════╝');
+        console.log('');
+        console.log(`🌐 Server running on port ${PORT}`);
+        console.log(`📊 Environment: ${config.NODE_ENV}`);
+        console.log(`🗄️  Database: ${config.DATABASE_URL ? 'Supabase (PostgreSQL)' : 'Local PostgreSQL'}`);
+        console.log('');
+        console.log('✅ Features enabled:');
+        console.log('   - Resume parsing (PDF/DOCX)');
+        console.log('   - AI resume customization');
+        console.log('   - Skill gap analysis');
+        console.log('   - Job scraping (LinkedIn, Indeed, Naukri, Unstop)');
+        console.log('   - Auto-apply system (cron: daily at 9 AM)');
+        console.log('   - Email notifications');
+        console.log('   - 2FA authentication');
+        console.log('   - OAuth (Google, LinkedIn) - Configure in .env');
+        console.log('');
+        console.log(`📝 API Docs: http://localhost:${PORT}/api/health`);
+        console.log('');
+    });
+}
 
 module.exports = app;

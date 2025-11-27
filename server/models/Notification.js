@@ -34,7 +34,9 @@ const Notification = sequelize.define('Notification', {
         }
     },
     type: {
-        type: DataTypes.ENUM('info', 'success', 'warning', 'error'),
+        type: sequelize.getDialect() === 'postgres'
+            ? DataTypes.ENUM('info', 'success', 'warning', 'error')
+            : DataTypes.STRING,
         defaultValue: 'info'
     },
     isRead: {

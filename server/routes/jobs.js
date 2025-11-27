@@ -7,6 +7,10 @@ const UniversalJobScraper = require('../services/jobScraper');
 
 const jobScraper = new UniversalJobScraper();
 
+const { sequelize } = require('../config/database');
+const isPostgres = sequelize.getDialect() === 'postgres';
+const iLike = isPostgres ? Op.iLike : Op.like;
+
 // @route   GET api/jobs
 // @desc    Get all jobs with filters
 // @access  Public
@@ -16,7 +20,7 @@ router.get('/', async (req, res) => {
         const where = {};
 
         if (location && location !== 'All Locations') {
-            where.location = { [Op.iLike]: `%${location}%` };
+            where.location = { [iLike]: `%${location}%` };
         }
 
         if (source) {
@@ -25,9 +29,9 @@ router.get('/', async (req, res) => {
 
         if (search) {
             where[Op.or] = [
-                { title: { [Op.iLike]: `%${search}%` } },
-                { company: { [Op.iLike]: `%${search}%` } },
-                { description: { [Op.iLike]: `%${search}%` } },
+                { title: { [iLike]: `%${search}%` } },
+                { company: { [iLike]: `%${search}%` } },
+                { description: { [iLike]: `%${search}%` } },
             ];
         }
 

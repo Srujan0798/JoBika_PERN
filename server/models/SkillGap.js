@@ -26,11 +26,11 @@ const SkillGap = sequelize.define('SkillGap', {
         onDelete: 'CASCADE'
     },
     matchingSkills: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: sequelize.getDialect() === 'postgres' ? DataTypes.ARRAY(DataTypes.STRING) : DataTypes.JSON,
         defaultValue: []
     },
     missingSkills: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: sequelize.getDialect() === 'postgres' ? DataTypes.ARRAY(DataTypes.STRING) : DataTypes.JSON,
         defaultValue: []
     },
     matchScore: {
@@ -42,7 +42,7 @@ const SkillGap = sequelize.define('SkillGap', {
         }
     },
     recommendations: {
-        type: DataTypes.JSONB,
+        type: sequelize.getDialect() === 'postgres' ? DataTypes.JSONB : DataTypes.JSON,
         defaultValue: [],
         comment: 'Array of recommendation objects with skill, priority, learningTime, resources'
     }

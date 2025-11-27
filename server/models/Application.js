@@ -35,7 +35,9 @@ const Application = sequelize.define('Application', {
         onDelete: 'SET NULL'
     },
     status: {
-        type: DataTypes.ENUM('applied', 'screening', 'interviewing', 'offered', 'rejected', 'withdrawn'),
+        type: sequelize.getDialect() === 'postgres'
+            ? DataTypes.ENUM('applied', 'screening', 'interviewing', 'offered', 'rejected', 'withdrawn')
+            : DataTypes.STRING,
         defaultValue: 'applied'
     },
     matchScore: {

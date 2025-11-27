@@ -1,30 +1,19 @@
-const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
+const { sequelize } = require('../config/database');
 
-let mongoServer;
-
-// Setup MongoDB Memory Server before all tests
+// Setup Database before all tests
 beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-
-    await mongoose.connect(mongoUri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    });
+    // Sync database (create tables)
+    // force: true drops tables if they exist
+    await sequelize.sync({ force: true });
 });
 
 // Clear all test data after each test
 afterEach(async () => {
-    const collections = mongoose.connection.collections;
-    for (const key in collections) {
-        await collections[key].deleteMany();
-    }
+    // Recreate tables to clear data
+    await sequelize.sync({ force: true });
 });
 
-// Close database connection and stop MongoDB server after all tests
+// Close database connection after all tests
 afterAll(async () => {
-    await mongoose.connection.dropDatabase();
-    await mongoose.connection.close();
-    await mongoServer.stop();
+    await sequelize.close();
 });

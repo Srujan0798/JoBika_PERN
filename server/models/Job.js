@@ -47,11 +47,15 @@ const Job = sequelize.define('Job', {
         }
     },
     source: {
-        type: DataTypes.ENUM('linkedin', 'indeed', 'naukri', 'unstop', 'other'),
+        type: sequelize.getDialect() === 'postgres'
+            ? DataTypes.ENUM('linkedin', 'indeed', 'naukri', 'unstop', 'other')
+            : DataTypes.STRING,
         allowNull: false
     },
     requiredSkills: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: sequelize.getDialect() === 'postgres'
+            ? DataTypes.ARRAY(DataTypes.STRING)
+            : DataTypes.JSON,
         defaultValue: []
     },
     postedDate: {

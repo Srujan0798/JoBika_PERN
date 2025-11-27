@@ -23,15 +23,15 @@ const UserPreference = sequelize.define('UserPreference', {
         defaultValue: false
     },
     targetRoles: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: sequelize.getDialect() === 'postgres' ? DataTypes.ARRAY(DataTypes.STRING) : DataTypes.JSON,
         defaultValue: []
     },
     targetLocations: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: sequelize.getDialect() === 'postgres' ? DataTypes.ARRAY(DataTypes.STRING) : DataTypes.JSON,
         defaultValue: []
     },
     salaryRange: {
-        type: DataTypes.JSONB,
+        type: sequelize.getDialect() === 'postgres' ? DataTypes.JSONB : DataTypes.JSON,
         defaultValue: {
             min: 0,
             max: 0,
@@ -39,15 +39,21 @@ const UserPreference = sequelize.define('UserPreference', {
         }
     },
     jobTypes: {
-        type: DataTypes.ARRAY(DataTypes.ENUM('full-time', 'part-time', 'contract', 'internship', 'remote')),
+        type: sequelize.getDialect() === 'postgres'
+            ? DataTypes.ARRAY(DataTypes.ENUM('full-time', 'part-time', 'contract', 'internship', 'remote'))
+            : DataTypes.JSON,
         defaultValue: ['full-time']
     },
     experienceLevel: {
-        type: DataTypes.ARRAY(DataTypes.ENUM('entry', 'mid', 'senior', 'lead', 'executive')),
+        type: sequelize.getDialect() === 'postgres'
+            ? DataTypes.ARRAY(DataTypes.ENUM('entry', 'mid', 'senior', 'lead', 'executive'))
+            : DataTypes.JSON,
         defaultValue: []
     },
     preferredSources: {
-        type: DataTypes.ARRAY(DataTypes.ENUM('linkedin', 'indeed', 'naukri', 'unstop')),
+        type: sequelize.getDialect() === 'postgres'
+            ? DataTypes.ARRAY(DataTypes.ENUM('linkedin', 'indeed', 'naukri', 'unstop'))
+            : DataTypes.JSON,
         defaultValue: ['linkedin', 'indeed', 'naukri']
     },
     minMatchScore: {
@@ -66,7 +72,7 @@ const UserPreference = sequelize.define('UserPreference', {
         }
     },
     notificationSettings: {
-        type: DataTypes.JSONB,
+        type: sequelize.getDialect() === 'postgres' ? DataTypes.JSONB : DataTypes.JSON,
         defaultValue: {
             emailAlerts: true,
             applicationUpdates: true,

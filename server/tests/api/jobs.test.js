@@ -1,6 +1,6 @@
 const request = require('supertest');
-const app = require('../index');
-const Job = require('../models/Job');
+const app = require('../../index');
+const { Job } = require('../../models');
 
 describe('Jobs API Endpoints', () => {
     let authToken;
@@ -18,7 +18,7 @@ describe('Jobs API Endpoints', () => {
         authToken = registerRes.body.token;
 
         // Create sample jobs
-        await Job.create([
+        await Job.bulkCreate([
             {
                 title: 'Software Engineer',
                 company: 'Google',
@@ -84,8 +84,8 @@ describe('Jobs API Endpoints', () => {
 
     describe('GET /api/jobs/:id', () => {
         it('should get a single job by id', async () => {
-            const jobs = await Job.find();
-            const jobId = jobs[0]._id;
+            const jobs = await Job.findAll();
+            const jobId = jobs[0].id;
 
             const res = await request(app).get(`/api/jobs/${jobId}`);
 
@@ -95,7 +95,7 @@ describe('Jobs API Endpoints', () => {
         });
 
         it('should return 404 for non-existent job', async () => {
-            const fakeId = '507f1f77bcf86cd799439011';
+            const fakeId = '00000000-0000-0000-0000-000000000000';
             const res = await request(app).get(`/api/jobs/${fakeId}`);
 
             expect(res.statusCode).toBe(404);

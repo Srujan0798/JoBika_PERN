@@ -49,11 +49,11 @@ const ResumeVersion = sequelize.define('ResumeVersion', {
         allowNull: true
     },
     customizedSkills: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: sequelize.getDialect() === 'postgres' ? DataTypes.ARRAY(DataTypes.STRING) : DataTypes.JSON,
         defaultValue: []
     },
     highlightedExperience: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: sequelize.getDialect() === 'postgres' ? DataTypes.ARRAY(DataTypes.STRING) : DataTypes.JSON,
         defaultValue: []
     },
     matchScore: {

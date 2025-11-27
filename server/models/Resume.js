@@ -35,7 +35,9 @@ const Resume = sequelize.define('Resume', {
         comment: 'AI-enhanced version'
     },
     skills: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: sequelize.getDialect() === 'postgres'
+            ? DataTypes.ARRAY(DataTypes.STRING)
+            : DataTypes.JSON,
         defaultValue: []
     },
     experienceYears: {
@@ -46,7 +48,7 @@ const Resume = sequelize.define('Resume', {
         }
     },
     extractedInfo: {
-        type: DataTypes.JSONB,
+        type: sequelize.getDialect() === 'postgres' ? DataTypes.JSONB : DataTypes.JSON,
         defaultValue: {},
         comment: 'Contains name, email, phone extracted from resume'
     },

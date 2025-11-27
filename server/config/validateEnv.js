@@ -4,7 +4,7 @@
  */
 
 const required = [
-    'MONGODB_URI',
+    'DATABASE_URL',
     'JWT_SECRET',
 ];
 
@@ -24,6 +24,11 @@ const optional = [
 ];
 
 function validateEnvironment() {
+    // Skip validation in test environment
+    if (process.env.NODE_ENV === 'test') {
+        return;
+    }
+
     const missing = [];
     const warnings = [];
 

@@ -1,4 +1,5 @@
-const User = require('../models/User');
+const { User } = require('../../models');
+const { Sequelize } = require('sequelize');
 
 describe('User Model', () => {
     it('should create a user successfully', async () => {
@@ -8,69 +9,63 @@ describe('User Model', () => {
             fullName: 'Test User',
         };
 
-        const user = new User(userData);
-        const savedUser = await user.save();
+        const user = await User.create(userData);
 
-        expect(savedUser._id).toBeDefined();
-        expect(savedUser.email).toBe(userData.email);
-        expect(savedUser.fullName).toBe(userData.fullName);
-        expect(savedUser.password).not.toBe(userData.password); // Should be hashed
+        expect(user.id).toBeDefined();
+        expect(user.email).toBe(userData.email);
+        expect(user.fullName).toBe(userData.fullName);
+        expect(user.password).not.toBe(userData.password); // Should be hashed
     });
 
     it('should hash password before saving', async () => {
-        const user = new User({
-            email: 'test@example.com',
+        const user = await User.create({
+            email: 'test2@example.com',
             password: 'plaintext',
             fullName: 'Test User',
         });
 
-        await user.save();
         expect(user.password).not.toBe('plaintext');
         expect(user.password.length).toBeGreaterThan(20); // Bcrypt hash length
     });
 
     it('should not save user without required fields', async () => {
-        const user = new User({ email: 'test@example.com' });
-
         let err;
         try {
-            await user.save();
+            await User.create({ email: 'test3@example.com' });
         } catch (error) {
             err = error;
         }
 
         expect(err).toBeDefined();
-        expect(err.name).toBe('ValidationError');
+        expect(err.name).toBe('SequelizeValidationError');
     });
 
     it('should not allow duplicate emails', async () => {
         const userData = {
-            email: 'test@example.com',
+            email: 'duplicate@example.com',
             password: 'password123',
             fullName: 'Test User',
         };
 
-        await new User(userData).save();
+        await User.create(userData);
 
         let err;
         try {
-            await new User(userData).save();
+            await User.create(userData);
         } catch (error) {
             err = error;
         }
 
         expect(err).toBeDefined();
-        expect(err.code).toBe(11000); // Duplicate key error
+        expect(err.name).toBe('SequelizeUniqueConstraintError');
     });
 
     it('should verify password correctly', async () => {
-        const user = new User({
-            email: 'test@example.com',
+        const user = await User.create({
+            email: 'verify@example.com',
             password: 'password123',
             fullName: 'Test User',
         });
-
-        await user.save();
 
         const isMatch = await user.matchPassword('password123');
         expect(isMatch).toBe(true);
@@ -80,15 +75,14 @@ describe('User Model', () => {
     });
 
     it('should allow OAuth users without password', async () => {
-        const user = new User({
+        const user = await User.create({
             email: 'oauth@example.com',
             fullName: 'OAuth User',
             oauthProvider: 'google',
             oauthId: '12345',
         });
 
-        const savedUser = await user.save();
-        expect(savedUser._id).toBeDefined();
-        expect(savedUser.oauthProvider).toBe('google');
+        expect(user.id).toBeDefined();
+        expect(user.oauthProvider).toBe('google');
     });
 });
