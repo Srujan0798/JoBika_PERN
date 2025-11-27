@@ -1,5 +1,5 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const { sequelize } = require('./config/database');
 const cors = require('cors');
 const cron = require('node-cron');
 const config = require('./config/config');
@@ -9,7 +9,7 @@ const { apiLimiter } = require('./middleware/rateLimit');
 const { requestLogger } = require('./middleware/logger');
 const { securityHeaders, corsOptions } = require('./middleware/security');
 const AutoApplySystem = require('./services/autoApply');
-const UserPreference = require('./models/UserPreference');
+const { UserPreference } = require('./models');
 
 const app = express();
 
@@ -33,12 +33,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/', apiLimiter);
 
 // Database Connection
-mongoose.connect(config.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-    .then(() => console.log('✅ MongoDB Connected'))
-    .catch(err => console.error('❌ MongoDB Connection Error:', err));
+sequelize.authenticate()
+    .then(() => {
+        console.log('✅ PostgreSQL Connected (Supabase)');
+        // Optionally sync models in development
+        if (config.NODE_ENV === 'development') {
+            return sequelize.sync({ alter: false });
+        }
+    })
+    .catch(err => console.error('❌ Database Connection Error:', err));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -141,7 +144,7 @@ app.listen(PORT, () => {
     console.log('');
     console.log(`🌐 Server running on port ${PORT}`);
     console.log(`📊 Environment: ${config.NODE_ENV}`);
-    console.log(`🗄️  Database: ${config.MONGODB_URI.includes('localhost') ? 'Local MongoDB' : 'MongoDB Atlas'}`);
+    console.log(`🗄️  Database: ${config.DATABASE_URL ? 'Supabase (PostgreSQL)' : 'Local PostgreSQL'}`);
     console.log('');
     console.log('✅ Features enabled:');
     console.log('   - Resume parsing (PDF/DOCX)');

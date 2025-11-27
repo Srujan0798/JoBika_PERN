@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const Job = require('../models/Job');
+const { Job } = require('../models');
+const { Op } = require('sequelize');
 const UniversalJobScraper = require('../services/jobScraper');
 
 const jobScraper = new UniversalJobScraper();
@@ -12,27 +13,29 @@ const jobScraper = new UniversalJobScraper();
 router.get('/', async (req, res) => {
     try {
         const { location, source, minSalary, search } = req.query;
-        const query = {};
+        const where = {};
 
         if (location && location !== 'All Locations') {
-            query.location = new RegExp(location, 'i');
+            where.location = { [Op.iLike]: `%${location}%` };
         }
 
         if (source) {
-            query.source = source;
+            where.source = source;
         }
 
         if (search) {
-            query.$or = [
-                { title: new RegExp(search, 'i') },
-                { company: new RegExp(search, 'i') },
-                { description: new RegExp(search, 'i') },
+            where[Op.or] = [
+                { title: { [Op.iLike]: `%${search}%` } },
+                { company: { [Op.iLike]: `%${search}%` } },
+                { description: { [Op.iLike]: `%${search}%` } },
             ];
         }
 
-        const jobs = await Job.find(query)
-            .sort({ createdAt: -1 })
-            .limit(100);
+        const jobs = await Job.findAll({
+            where,
+            order: [['createdAt', 'DESC']],
+            limit: 100
+        });
 
         res.json(jobs);
     } catch (err) {
@@ -46,16 +49,13 @@ router.get('/', async (req, res) => {
 // @access  Public
 router.get('/:id', async (req, res) => {
     try {
-        const job = await Job.findById(req.params.id);
+        const job = await Job.findByPk(req.params.id);
         if (!job) {
             return res.status(404).json({ msg: 'Job not found' });
         }
         res.json(job);
     } catch (err) {
         console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ msg: 'Job not found' });
-        }
         res.status(500).send('Server Error');
     }
 });
@@ -77,12 +77,14 @@ router.post('/scrape', auth, async (req, res) => {
         for (const jobData of scrapedJobs) {
             // Check if job already exists
             const existing = await Job.findOne({
-                title: jobData.title,
-                company: jobData.company,
+                where: {
+                    title: jobData.title,
+                    company: jobData.company,
+                }
             });
 
             if (!existing) {
-                const job = new Job({
+                await Job.create({
                     title: jobData.title,
                     company: jobData.company,
                     location: jobData.location,
@@ -94,7 +96,6 @@ router.post('/scrape', auth, async (req, res) => {
                     url: jobData.url,
                 });
 
-                await job.save();
                 addedCount++;
             }
         }
@@ -119,7 +120,7 @@ router.post('/', auth, async (req, res) => {
     const { title, company, location, description, salary, url, source, requiredSkills } = req.body;
 
     try {
-        const newJob = new Job({
+        const job = await Job.create({
             title,
             company,
             location,
@@ -130,7 +131,6 @@ router.post('/', auth, async (req, res) => {
             requiredSkills: requiredSkills || [],
         });
 
-        const job = await newJob.save();
         res.json(job);
     } catch (err) {
         console.error(err.message);

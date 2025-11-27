@@ -1,66 +1,106 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
+const { sequelize } = require('../config/database');
 
-const UserSchema = new mongoose.Schema({
+const User = sequelize.define('User', {
+    id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true
+    },
     email: {
-        type: String,
-        required: true,
+        type: DataTypes.STRING,
+        allowNull: false,
         unique: true,
-        lowercase: true,
-        trim: true,
+        validate: {
+            isEmail: true
+        },
+        set(value) {
+            this.setDataValue('email', value.toLowerCase().trim());
+        }
     },
     password: {
-        type: String,
-        required: function() {
-            // Password not required if using OAuth
-            return !this.oauthProvider;
-        },
+        type: DataTypes.STRING,
+        allowNull: true, // Nullable for OAuth users
+        validate: {
+            notEmpty: function (value) {
+                if (!this.oauthProvider && !value) {
+                    throw new Error('Password is required for non-OAuth users');
+                }
+            }
+        }
     },
     fullName: {
-        type: String,
-        required: true,
-        trim: true,
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            notEmpty: true
+        },
+        set(value) {
+            this.setDataValue('fullName', value.trim());
+        }
     },
     phone: {
-        type: String,
-        trim: true,
+        type: DataTypes.STRING,
+        allowNull: true,
+        set(value) {
+            if (value) {
+                this.setDataValue('phone', value.trim());
+            }
+        }
     },
     // OAuth fields
     oauthProvider: {
-        type: String,
-        enum: ['google', 'linkedin', null],
+        type: DataTypes.ENUM('google', 'linkedin'),
+        allowNull: true
     },
     oauthId: {
-        type: String,
+        type: DataTypes.STRING,
+        allowNull: true
     },
     // Two-Factor Authentication
     twoFactorSecret: {
-        type: String,
+        type: DataTypes.STRING,
+        allowNull: true
     },
     isTwoFactorEnabled: {
-        type: Boolean,
-        default: false,
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-}, { timestamps: true });
-
-// Password hashing middleware
-UserSchema.pre('save', async function (next) {
-    if (!this.isModified('password') || !this.password) {
-        return next();
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
+}, {
+    tableName: 'users',
+    timestamps: true,
+    indexes: [
+        {
+            unique: true,
+            fields: ['email']
+        },
+        {
+            fields: ['oauthProvider', 'oauthId']
+        }
+    ],
+    hooks: {
+        // Hash password before creating user
+        beforeCreate: async (user) => {
+            if (user.password) {
+                const salt = await bcrypt.genSalt(10);
+                user.password = await bcrypt.hash(user.password, salt);
+            }
+        },
+        // Hash password before updating if it changed
+        beforeUpdate: async (user) => {
+            if (user.changed('password') && user.password) {
+                const salt = await bcrypt.genSalt(10);
+                user.password = await bcrypt.hash(user.password, salt);
+            }
+        }
+    }
 });
 
-// Password verification method
-UserSchema.methods.matchPassword = async function (enteredPassword) {
+// Instance method to verify password
+User.prototype.matchPassword = async function (enteredPassword) {
     if (!this.password) return false;
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = User;

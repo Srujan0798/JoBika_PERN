@@ -1,42 +1,73 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
 
-const ApplicationSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
+const Application = sequelize.define('Application', {
+    id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true
     },
-    job: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Job',
-        required: true,
+    userId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: 'users',
+            key: 'id'
+        },
+        onDelete: 'CASCADE'
     },
-    resume: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Resume',
+    jobId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: 'jobs',
+            key: 'id'
+        },
+        onDelete: 'CASCADE'
+    },
+    resumeId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+            model: 'resumes',
+            key: 'id'
+        },
+        onDelete: 'SET NULL'
     },
     status: {
-        type: String,
-        enum: ['applied', 'screening', 'interviewing', 'offered', 'rejected', 'withdrawn'],
-        default: 'applied',
+        type: DataTypes.ENUM('applied', 'screening', 'interviewing', 'offered', 'rejected', 'withdrawn'),
+        defaultValue: 'applied'
     },
     matchScore: {
-        type: Number,
-        min: 0,
-        max: 100,
-        default: 0,
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+            min: 0,
+            max: 100
+        }
     },
     appliedDate: {
-        type: Date,
-        default: Date.now,
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
     },
     notes: {
-        type: String,
-    },
-}, { timestamps: true });
+        type: DataTypes.TEXT,
+        allowNull: true
+    }
+}, {
+    tableName: 'applications',
+    timestamps: true,
+    indexes: [
+        {
+            fields: ['userId', 'appliedDate']
+        },
+        {
+            fields: ['userId', 'status']
+        },
+        {
+            fields: ['jobId']
+        }
+    ]
+});
 
-// Indexes for faster queries
-ApplicationSchema.index({ user: 1, appliedDate: -1 });
-ApplicationSchema.index({ user: 1, status: 1 });
-
-module.exports = mongoose.model('Application', ApplicationSchema);
+module.exports = Application;

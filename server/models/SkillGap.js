@@ -1,47 +1,62 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
 
-const SkillGapSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
+const SkillGap = sequelize.define('SkillGap', {
+    id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true
     },
-    job: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Job',
-        required: true,
+    userId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: 'users',
+            key: 'id'
+        },
+        onDelete: 'CASCADE'
+    },
+    jobId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: 'jobs',
+            key: 'id'
+        },
+        onDelete: 'CASCADE'
     },
     matchingSkills: {
-        type: [String],
-        default: [],
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: []
     },
     missingSkills: {
-        type: [String],
-        default: [],
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: []
     },
     matchScore: {
-        type: Number,
-        min: 0,
-        max: 100,
-        default: 0,
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+            min: 0,
+            max: 100
+        }
     },
-    recommendations: [{
-        skill: String,
-        priority: {
-            type: String,
-            enum: ['high', 'medium', 'low'],
+    recommendations: {
+        type: DataTypes.JSONB,
+        defaultValue: [],
+        comment: 'Array of recommendation objects with skill, priority, learningTime, resources'
+    }
+}, {
+    tableName: 'skill_gaps',
+    timestamps: true,
+    indexes: [
+        {
+            fields: ['userId', 'jobId']
         },
-        learningTime: String,
-        resources: [String],
-    }],
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-}, { timestamps: true });
+        {
+            fields: ['userId', 'createdAt']
+        }
+    ]
+});
 
-// Index for faster queries
-SkillGapSchema.index({ user: 1, job: 1 });
-SkillGapSchema.index({ user: 1, createdAt: -1 });
-
-module.exports = mongoose.model('SkillGap', SkillGapSchema);
+module.exports = SkillGap;

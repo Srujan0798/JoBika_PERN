@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const Notification = require('../models/Notification');
+const { Notification } = require('../models');
+const { Op } = require('sequelize');
 
 // @route   GET api/notifications
 // @desc    Get user notifications
@@ -9,19 +10,23 @@ const Notification = require('../models/Notification');
 router.get('/', auth, async (req, res) => {
     try {
         const { isRead } = req.query;
-        const query = { user: req.user.id };
+        const where = { userId: req.user.id };
 
         if (isRead !== undefined) {
-            query.isRead = isRead === 'true';
+            where.isRead = isRead === 'true';
         }
 
-        const notifications = await Notification.find(query)
-            .sort({ createdAt: -1 })
-            .limit(50);
+        const notifications = await Notification.findAll({
+            where,
+            order: [['createdAt', 'DESC']],
+            limit: 50
+        });
 
-        const unreadCount = await Notification.countDocuments({
-            user: req.user.id,
-            isRead: false,
+        const unreadCount = await Notification.count({
+            where: {
+                userId: req.user.id,
+                isRead: false,
+            }
         });
 
         res.json({
@@ -45,13 +50,13 @@ router.post('/mark-read', auth, async (req, res) => {
             return res.status(400).json({ msg: 'Invalid notification IDs' });
         }
 
-        await Notification.updateMany(
+        await Notification.update(
+            { isRead: true },
             {
-                _id: { $in: notificationIds },
-                user: req.user.id,
-            },
-            {
-                $set: { isRead: true },
+                where: {
+                    id: { [Op.in]: notificationIds },
+                    userId: req.user.id,
+                }
             }
         );
 
@@ -67,9 +72,14 @@ router.post('/mark-read', auth, async (req, res) => {
 // @access  Private
 router.post('/mark-all-read', auth, async (req, res) => {
     try {
-        await Notification.updateMany(
-            { user: req.user.id, isRead: false },
-            { $set: { isRead: true } }
+        await Notification.update(
+            { isRead: true },
+            {
+                where: {
+                    userId: req.user.id,
+                    isRead: false
+                }
+            }
         );
 
         res.json({ msg: 'All notifications marked as read' });
@@ -84,25 +94,22 @@ router.post('/mark-all-read', auth, async (req, res) => {
 // @access  Private
 router.delete('/:id', auth, async (req, res) => {
     try {
-        const notification = await Notification.findById(req.params.id);
+        const notification = await Notification.findByPk(req.params.id);
 
         if (!notification) {
             return res.status(404).json({ msg: 'Notification not found' });
         }
 
         // Make sure user owns this notification
-        if (notification.user.toString() !== req.user.id) {
+        if (notification.userId !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
-        await notification.deleteOne();
+        await notification.destroy();
 
         res.json({ msg: 'Notification removed' });
     } catch (err) {
         console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ msg: 'Notification not found' });
-        }
         res.status(500).send('Server Error');
     }
 });

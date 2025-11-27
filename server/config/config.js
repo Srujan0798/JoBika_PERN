@@ -6,7 +6,7 @@ module.exports = {
     NODE_ENV: process.env.NODE_ENV || 'development',
 
     // Database
-    MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/jobika',
+    DATABASE_URL: process.env.DATABASE_URL || 'postgresql://localhost:5432/jobika',
 
     // JWT
     JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key-change-in-production',

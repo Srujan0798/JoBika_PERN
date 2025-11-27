@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const Application = require('../models/Application');
-const Job = require('../models/Job');
-const SkillGap = require('../models/SkillGap');
-const Resume = require('../models/Resume');
+const { Application, Job, SkillGap, Resume } = require('../models');
+const { sequelize } = require('../config/database');
+const { Op } = require('sequelize');
 
 // @route   GET api/analytics
 // @desc    Get user analytics and market insights
@@ -12,85 +11,108 @@ const Resume = require('../models/Resume');
 router.get('/', auth, async (req, res) => {
     try {
         // Application stats
-        const totalApplications = await Application.countDocuments({ user: req.user.id });
-        const applicationsByStatus = await Application.aggregate([
-            { $match: { user: req.user.id } },
-            { $group: { _id: '$status', count: { $sum: 1 } } },
-        ]);
+        const totalApplications = await Application.count({
+            where: { userId: req.user.id }
+        });
+
+        // Applications by status
+        const applicationsByStatus = await Application.findAll({
+            where: { userId: req.user.id },
+            attributes: [
+                'status',
+                [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+            ],
+            group: ['status'],
+            raw: true
+        });
 
         const statusCounts = {};
         applicationsByStatus.forEach(item => {
-            statusCounts[item._id] = item.count;
+            statusCounts[item.status] = parseInt(item.count);
         });
 
         // Average match score
-        const avgMatchScore = await Application.aggregate([
-            { $match: { user: req.user.id } },
-            { $group: { _id: null, avgScore: { $avg: '$matchScore' } } },
-        ]);
+        const avgMatchScore = await Application.findOne({
+            where: { userId: req.user.id },
+            attributes: [
+                [sequelize.fn('AVG', sequelize.col('matchScore')), 'avgScore']
+            ],
+            raw: true
+        });
 
         // Recent activity (last 30 days)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        const recentApplications = await Application.countDocuments({
-            user: req.user.id,
-            appliedDate: { $gte: thirtyDaysAgo },
+        const recentApplications = await Application.count({
+            where: {
+                userId: req.user.id,
+                appliedDate: { [Op.gte]: thirtyDaysAgo },
+            }
         });
 
         // Top companies applied to
-        const topCompanies = await Application.aggregate([
-            { $match: { user: req.user.id } },
-            {
-                $lookup: {
-                    from: 'jobs',
-                    localField: 'job',
-                    foreignField: '_id',
-                    as: 'jobData',
-                },
-            },
-            { $unwind: '$jobData' },
-            {
-                $group: {
-                    _id: '$jobData.company',
-                    count: { $sum: 1 },
-                },
-            },
-            { $sort: { count: -1 } },
-            { $limit: 5 },
-        ]);
+        const topCompanies = await Application.findAll({
+            where: { userId: req.user.id },
+            attributes: [
+                [sequelize.fn('COUNT', sequelize.col('Application.id')), 'count']
+            ],
+            include: [{
+                model: Job,
+                as: 'job',
+                attributes: ['company']
+            }],
+            group: ['job.company'],
+            order: [[sequelize.fn('COUNT', sequelize.col('Application.id')), 'DESC']],
+            limit: 5,
+            raw: true,
+            nest: true
+        });
 
         // Market insights
-        const totalJobs = await Job.countDocuments();
-        const jobsBySource = await Job.aggregate([
-            { $group: { _id: '$source', count: { $sum: 1 } } },
-        ]);
+        const totalJobs = await Job.count();
+
+        const jobsBySource = await Job.findAll({
+            attributes: [
+                'source',
+                [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+            ],
+            group: ['source'],
+            raw: true
+        });
 
         const sourceCounts = {};
         jobsBySource.forEach(item => {
-            sourceCounts[item._id] = item.count;
+            sourceCounts[item.source] = parseInt(item.count);
         });
 
-        // Most common skills required
-        const topSkills = await Job.aggregate([
-            { $unwind: '$requiredSkills' },
-            { $group: { _id: '$requiredSkills', count: { $sum: 1 } } },
-            { $sort: { count: -1 } },
-            { $limit: 10 },
-        ]);
+        // Most common skills required (simplified - PostgreSQL array handling)
+        const topSkills = await sequelize.query(`
+            SELECT skill, COUNT(*) as count
+            FROM (
+                SELECT unnest("requiredSkills") as skill
+                FROM jobs
+            ) as skills
+            GROUP BY skill
+            ORDER BY count DESC
+            LIMIT 10
+        `, { type: sequelize.QueryTypes.SELECT });
 
         res.json({
             applicationStats: {
                 total: totalApplications,
                 byStatus: statusCounts,
-                averageMatchScore: avgMatchScore[0]?.avgScore || 0,
+                averageMatchScore: parseFloat(avgMatchScore?.avgScore || 0),
                 last30Days: recentApplications,
-                topCompanies: topCompanies.map(c => ({ company: c._id, count: c.count })),
+                topCompanies: topCompanies.map(c => ({
+                    company: c.job?.company || 'Unknown',
+                    count: parseInt(c.count)
+                })),
             },
             marketInsights: {
                 totalJobs,
                 bySource: sourceCounts,
-                topSkills: topSkills.map(s => ({ skill: s._id, count: s.count })),
+                topSkills: topSkills.map(s => ({ skill: s.skill, count: parseInt(s.count) })),
             },
         });
     } catch (err) {
@@ -105,15 +127,21 @@ router.get('/', auth, async (req, res) => {
 router.get('/learning-recommendations', auth, async (req, res) => {
     try {
         // Get user's latest resume
-        const resume = await Resume.findOne({ user: req.user.id }).sort({ uploadedAt: -1 });
+        const resume = await Resume.findOne({
+            where: { userId: req.user.id },
+            order: [['uploadedAt', 'DESC']]
+        });
+
         if (!resume) {
             return res.status(404).json({ msg: 'No resume found' });
         }
 
         // Get recent skill gap analyses
-        const skillGaps = await SkillGap.find({ user: req.user.id })
-            .sort({ createdAt: -1 })
-            .limit(10);
+        const skillGaps = await SkillGap.findAll({
+            where: { userId: req.user.id },
+            order: [['createdAt', 'DESC']],
+            limit: 10
+        });
 
         // Aggregate missing skills from all analyses
         const skillFrequency = {};
@@ -123,7 +151,10 @@ router.get('/learning-recommendations', auth, async (req, res) => {
             gap.missingSkills.forEach(skill => {
                 skillFrequency[skill] = (skillFrequency[skill] || 0) + 1;
             });
-            allRecommendations.push(...gap.recommendations);
+
+            // Recommendations is JSONB array
+            const recs = Array.isArray(gap.recommendations) ? gap.recommendations : [];
+            allRecommendations.push(...recs);
         });
 
         // Sort skills by frequency

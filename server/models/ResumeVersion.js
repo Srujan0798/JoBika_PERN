@@ -1,51 +1,80 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
 
-const ResumeVersionSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
+const ResumeVersion = sequelize.define('ResumeVersion', {
+    id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true
     },
-    baseResume: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Resume',
-        required: true,
+    userId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: 'users',
+            key: 'id'
+        },
+        onDelete: 'CASCADE'
     },
-    job: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Job',
-        required: true,
+    baseResumeId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: 'resumes',
+            key: 'id'
+        },
+        onDelete: 'CASCADE'
+    },
+    jobId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: 'jobs',
+            key: 'id'
+        },
+        onDelete: 'CASCADE'
     },
     versionName: {
-        type: String,
-        required: true,
-        trim: true,
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            notEmpty: true
+        },
+        set(value) {
+            this.setDataValue('versionName', value.trim());
+        }
     },
     customizedSummary: {
-        type: String,
+        type: DataTypes.TEXT,
+        allowNull: true
     },
     customizedSkills: {
-        type: [String],
-        default: [],
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: []
     },
     highlightedExperience: {
-        type: [String],
-        default: [],
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: []
     },
     matchScore: {
-        type: Number,
-        min: 0,
-        max: 100,
-        default: 0,
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-}, { timestamps: true });
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+            min: 0,
+            max: 100
+        }
+    }
+}, {
+    tableName: 'resume_versions',
+    timestamps: true,
+    indexes: [
+        {
+            fields: ['userId', 'jobId']
+        },
+        {
+            fields: ['baseResumeId']
+        }
+    ]
+});
 
-// Index for faster queries
-ResumeVersionSchema.index({ user: 1, job: 1 });
-ResumeVersionSchema.index({ baseResume: 1 });
-
-module.exports = mongoose.model('ResumeVersion', ResumeVersionSchema);
+module.exports = ResumeVersion;

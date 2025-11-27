@@ -1,13 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const Application = require('../models/Application');
-const Job = require('../models/Job');
-const Resume = require('../models/Resume');
-const Notification = require('../models/Notification');
+const { Application, Job, Resume, Notification, User } = require('../models');
 const { calculateMatchScore } = require('../services/resumeParser');
 const { sendApplicationConfirmation } = require('../services/emailService');
-const User = require('../models/User');
 
 // @route   POST api/applications
 // @desc    Create job application
@@ -17,15 +13,17 @@ router.post('/', auth, async (req, res) => {
         const { jobId, notes } = req.body;
 
         // Get job
-        const job = await Job.findById(jobId);
+        const job = await Job.findByPk(jobId);
         if (!job) {
             return res.status(404).json({ msg: 'Job not found' });
         }
 
         // Check if already applied
         const existingApplication = await Application.findOne({
-            user: req.user.id,
-            job: jobId,
+            where: {
+                userId: req.user.id,
+                jobId: jobId,
+            }
         });
 
         if (existingApplication) {
@@ -33,7 +31,11 @@ router.post('/', auth, async (req, res) => {
         }
 
         // Get user's latest resume
-        const resume = await Resume.findOne({ user: req.user.id }).sort({ uploadedAt: -1 });
+        const resume = await Resume.findOne({
+            where: { userId: req.user.id },
+            order: [['uploadedAt', 'DESC']]
+        });
+
         if (!resume) {
             return res.status(404).json({ msg: 'No resume found. Please upload a resume first.' });
         }
@@ -42,19 +44,17 @@ router.post('/', auth, async (req, res) => {
         const matchScore = calculateMatchScore(resume.skills, job.requiredSkills);
 
         // Create application
-        const application = new Application({
-            user: req.user.id,
-            job: jobId,
-            resume: resume._id,
+        const application = await Application.create({
+            userId: req.user.id,
+            jobId: jobId,
+            resumeId: resume.id,
             status: 'applied',
             matchScore,
             notes,
         });
 
-        await application.save();
-
         // Send confirmation email
-        const user = await User.findById(req.user.id);
+        const user = await User.findByPk(req.user.id);
         if (user) {
             try {
                 await sendApplicationConfirmation(
@@ -70,15 +70,15 @@ router.post('/', auth, async (req, res) => {
         }
 
         // Create notification
-        await new Notification({
-            user: req.user.id,
+        await Notification.create({
+            userId: req.user.id,
             title: 'Application Submitted',
             message: `Successfully applied to ${job.title} at ${job.company}. Match score: ${matchScore}%`,
             type: 'success',
-        }).save();
+        });
 
         res.json({
-            id: application._id,
+            id: application.id,
             jobId,
             status: application.status,
             matchScore,
@@ -97,16 +97,28 @@ router.post('/', auth, async (req, res) => {
 router.get('/', auth, async (req, res) => {
     try {
         const { status } = req.query;
-        const query = { user: req.user.id };
+        const where = { userId: req.user.id };
 
         if (status) {
-            query.status = status;
+            where.status = status;
         }
 
-        const applications = await Application.find(query)
-            .populate('job', 'title company location salary source')
-            .populate('resume', 'originalName')
-            .sort({ appliedDate: -1 });
+        const applications = await Application.findAll({
+            where,
+            include: [
+                {
+                    model: Job,
+                    as: 'job',
+                    attributes: ['title', 'company', 'location', 'salary', 'source']
+                },
+                {
+                    model: Resume,
+                    as: 'resume',
+                    attributes: ['originalName']
+                }
+            ],
+            order: [['appliedDate', 'DESC']]
+        });
 
         res.json(applications);
     } catch (err) {
@@ -120,25 +132,25 @@ router.get('/', auth, async (req, res) => {
 // @access  Private
 router.get('/:id', auth, async (req, res) => {
     try {
-        const application = await Application.findById(req.params.id)
-            .populate('job')
-            .populate('resume');
+        const application = await Application.findByPk(req.params.id, {
+            include: [
+                { model: Job, as: 'job' },
+                { model: Resume, as: 'resume' }
+            ]
+        });
 
         if (!application) {
             return res.status(404).json({ msg: 'Application not found' });
         }
 
         // Make sure user owns this application
-        if (application.user.toString() !== req.user.id) {
+        if (application.userId !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
         res.json(application);
     } catch (err) {
         console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ msg: 'Application not found' });
-        }
         res.status(500).send('Server Error');
     }
 });
@@ -150,14 +162,14 @@ router.patch('/:id', auth, async (req, res) => {
     try {
         const { status, notes } = req.body;
 
-        const application = await Application.findById(req.params.id);
+        const application = await Application.findByPk(req.params.id);
 
         if (!application) {
             return res.status(404).json({ msg: 'Application not found' });
         }
 
         // Make sure user owns this application
-        if (application.user.toString() !== req.user.id) {
+        if (application.userId !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -172,7 +184,7 @@ router.patch('/:id', auth, async (req, res) => {
 
         // Create notification for status change
         if (status && status !== 'applied') {
-            const job = await Job.findById(application.job);
+            const job = await Job.findByPk(application.jobId);
             const statusMessages = {
                 screening: 'Your application is being screened',
                 interviewing: 'Congratulations! You have an interview',
@@ -181,12 +193,12 @@ router.patch('/:id', auth, async (req, res) => {
                 withdrawn: 'Application withdrawn',
             };
 
-            await new Notification({
-                user: req.user.id,
+            await Notification.create({
+                userId: req.user.id,
                 title: 'Application Status Updated',
                 message: `${job.title} at ${job.company}: ${statusMessages[status]}`,
                 type: status === 'offered' ? 'success' : status === 'rejected' ? 'error' : 'info',
-            }).save();
+            });
         }
 
         res.json(application);
@@ -201,25 +213,22 @@ router.patch('/:id', auth, async (req, res) => {
 // @access  Private
 router.delete('/:id', auth, async (req, res) => {
     try {
-        const application = await Application.findById(req.params.id);
+        const application = await Application.findByPk(req.params.id);
 
         if (!application) {
             return res.status(404).json({ msg: 'Application not found' });
         }
 
         // Make sure user owns this application
-        if (application.user.toString() !== req.user.id) {
+        if (application.userId !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
-        await application.deleteOne();
+        await application.destroy();
 
         res.json({ msg: 'Application removed' });
     } catch (err) {
         console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ msg: 'Application not found' });
-        }
         res.status(500).send('Server Error');
     }
 });

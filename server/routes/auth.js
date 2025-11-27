@@ -4,20 +4,18 @@ const jwt = require('jsonwebtoken');
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 const passport = require('passport');
-const User = require('../models/User');
-const Notification = require('../models/Notification');
+const { User, Notification } = require('../models');
 const { sendWelcomeEmail } = require('../services/emailService');
 
 // Helper to create notification
 async function createNotification(userId, title, message, type = 'info') {
     try {
-        const notification = new Notification({
-            user: userId,
+        await Notification.create({
+            userId,
             title,
             message,
             type,
         });
-        await notification.save();
     } catch (error) {
         console.error('Failed to create notification:', error);
     }
@@ -28,19 +26,17 @@ router.post('/register', async (req, res) => {
     const { email, password, fullName, phone } = req.body;
 
     try {
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ where: { email } });
         if (user) {
             return res.status(400).json({ msg: 'User already exists' });
         }
 
-        user = new User({
+        user = await User.create({
             email,
             password,
             fullName,
             phone,
         });
-
-        await user.save();
 
         const payload = {
             user: {
@@ -92,7 +88,7 @@ router.post('/login', async (req, res) => {
     const { email, password, twoFactorCode } = req.body;
 
     try {
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ where: { email } });
         if (!user) {
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
@@ -162,7 +158,7 @@ router.post('/2fa/setup', async (req, res) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        const user = await User.findById(decoded.user.id);
+        const user = await User.findByPk(decoded.user.id);
 
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });
@@ -199,7 +195,7 @@ router.post('/2fa/verify', async (req, res) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        const user = await User.findById(decoded.user.id);
+        const user = await User.findByPk(decoded.user.id);
 
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });
@@ -243,7 +239,7 @@ router.post('/2fa/disable', async (req, res) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-        const user = await User.findById(decoded.user.id);
+        const user = await User.findByPk(decoded.user.id);
 
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });
@@ -258,7 +254,7 @@ router.post('/2fa/disable', async (req, res) => {
 
         // Disable 2FA
         user.isTwoFactorEnabled = false;
-        user.twoFactorSecret = undefined;
+        user.twoFactorSecret = null;
         await user.save();
 
         await createNotification(

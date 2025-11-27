@@ -1,55 +1,85 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
 
-const JobSchema = new mongoose.Schema({
+const Job = sequelize.define('Job', {
+    id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true
+    },
     title: {
-        type: String,
-        required: true,
-        trim: true,
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            notEmpty: true
+        },
+        set(value) {
+            this.setDataValue('title', value.trim());
+        }
     },
     company: {
-        type: String,
-        required: true,
-        trim: true,
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            notEmpty: true
+        },
+        set(value) {
+            this.setDataValue('company', value.trim());
+        }
     },
     location: {
-        type: String,
-        required: true,
+        type: DataTypes.STRING,
+        allowNull: false
     },
     description: {
-        type: String,
+        type: DataTypes.TEXT,
+        allowNull: true
     },
     salary: {
-        type: String,
+        type: DataTypes.STRING,
+        allowNull: true
     },
     url: {
-        type: String,
-        required: true,
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            isUrl: true
+        }
     },
     source: {
-        type: String, // 'linkedin', 'indeed', 'naukri', 'unstop'
-        required: true,
-        enum: ['linkedin', 'indeed', 'naukri', 'unstop', 'other'],
+        type: DataTypes.ENUM('linkedin', 'indeed', 'naukri', 'unstop', 'other'),
+        allowNull: false
     },
     requiredSkills: {
-        type: [String],
-        default: [],
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: []
     },
     postedDate: {
-        type: String,
-        default: 'Recently',
+        type: DataTypes.STRING,
+        defaultValue: 'Recently'
     },
     matchScore: {
-        type: Number,
-        default: 0,
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-}, { timestamps: true });
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+            min: 0,
+            max: 100
+        }
+    }
+}, {
+    tableName: 'jobs',
+    timestamps: true,
+    indexes: [
+        {
+            fields: ['location', 'source']
+        },
+        {
+            fields: ['company']
+        },
+        {
+            fields: ['createdAt']
+        }
+    ]
+});
 
-// Index for faster searches
-JobSchema.index({ title: 'text', company: 'text', description: 'text' });
-JobSchema.index({ location: 1, source: 1 });
-
-module.exports = mongoose.model('Job', JobSchema);
+module.exports = Job;

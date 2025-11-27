@@ -1,6 +1,6 @@
 # 🚀 JoBika - AI-Powered Job Application Platform
 
-> **Your intelligent job search companion - Made in India, for global job seekers**
+> **Your intelligent job search companion - Built with PERN Stack (PostgreSQL + Express + React + Node.js)**
 
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](https://github.com)
 [![Testing](https://img.shields.io/badge/Testing-Comprehensive-blue)](https://github.com)
@@ -43,25 +43,30 @@ JoBika is a **complete AI job agent** that helps you find and apply to jobs glob
 ## 🚀 Quick Start
 
 ### **Prerequisites**
-- Python 3.8+
-- pip
+- Node.js 16+
+- PostgreSQL (or Supabase account)
+- npm or yarn
 
 ### **Installation**
 
 ```bash
 # Clone repository
 git clone <your-repo-url>
-cd JoBika
+cd JoBika_MERN
 
 # Install dependencies
-cd backend
-pip install -r requirements.txt
+cd server
+npm install
 
-# Run database migration
-python migrate_db.py
+# Set up environment variables
+cp .env.example .env
+# Edit .env and add your Supabase DATABASE_URL
+
+# Run database sync
+npm run db:sync
 
 # Start server
-python server.py
+npm run dev
 ```
 
 ### **Access Application**
@@ -113,10 +118,11 @@ Status tracking
 ## 🏗️ Architecture
 
 ### **Backend**
-- **Framework**: Flask (Python)
-- **Database**: SQLite (local) / PostgreSQL (production)
+- **Framework**: Express.js (Node.js)
+- **Database**: PostgreSQL (Supabase)
+- **ORM**: Sequelize
 - **Authentication**: JWT tokens
-- **Scheduling**: APScheduler (cron jobs)
+- **Scheduling**: node-cron (cron jobs)
 
 ### **Frontend**
 - **Pages**: 9 responsive pages
@@ -124,8 +130,8 @@ Status tracking
 - **JavaScript**: Vanilla JS with API integration
 
 ### **AI Features**
-- **Resume Parser**: PyPDF2, python-docx
-- **Job Scraper**: BeautifulSoup, Selenium
+- **Resume Parser**: pdf-parse, mammoth
+- **Job Scraper**: cheerio, axios
 - **Customization**: Custom algorithms
 - **Skill Analysis**: Semantic matching
 
@@ -146,14 +152,19 @@ JoBika/
 │       ├── css/main.css
 │       └── js/app.js
 │
-├── backend/                      # Backend
-│   ├── server.py                # Main Flask server
-│   ├── resume_parser.py         # PDF/DOCX parsing
-│   ├── resume_customizer.py     # Resume customization ⭐
-│   ├── job_scraper_universal.py # Universal job scraper ⭐
-│   ├── email_service.py         # Email notifications
-│   ├── migrate_db.py            # Database migration ⭐
-│   └── requirements.txt
+├── server/                       # Backend (Node.js/Express)
+│   ├── index.js                 # Main server file
+│   ├── config/
+│   │   ├── config.js            # Configuration
+│   │   └── database.js          # Sequelize setup
+│   ├── models/                  # Sequelize models
+│   │   ├── User.js
+│   │   ├── Job.js
+│   │   ├── Application.js
+│   │   └── ...
+│   ├── routes/                  # API routes
+│   ├── services/                # Business logic
+│   └── package.json
 │
 ├── docs/                         # Documentation
 │   ├── ARCHITECTURE.md
@@ -227,14 +238,13 @@ JoBika finds jobs **globally**, not limited to one country:
 
 ## 💰 Cost
 
-**Total**: **$0/month**
+**Total**: **$0/month** (Free tier)
 
 **Free Services**:
-- Railway: $5 credit/month
-- Render: Free tier
+- Render: Free tier (750 hours/month)
+- Supabase: 500MB database, 2GB bandwidth
 - Gmail SMTP: 500 emails/day
-- PostgreSQL: 500MB free
-- APScheduler: Free (local)
+- node-cron: Free (built-in)
 
 ---
 

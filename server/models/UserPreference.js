@@ -1,78 +1,87 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
 
-const UserPreferenceSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
+const UserPreference = sequelize.define('UserPreference', {
+    id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true
+    },
+    userId: {
+        type: DataTypes.UUID,
+        allowNull: false,
         unique: true,
+        references: {
+            model: 'users',
+            key: 'id'
+        },
+        onDelete: 'CASCADE'
     },
     // Auto-apply settings
     autoApplyEnabled: {
-        type: Boolean,
-        default: false,
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     },
     targetRoles: {
-        type: [String],
-        default: [],
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: []
     },
     targetLocations: {
-        type: [String],
-        default: [],
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: []
     },
     salaryRange: {
-        min: {
-            type: Number,
-            default: 0,
-        },
-        max: {
-            type: Number,
-            default: 0,
-        },
-        currency: {
-            type: String,
-            default: 'INR',
-        },
+        type: DataTypes.JSONB,
+        defaultValue: {
+            min: 0,
+            max: 0,
+            currency: 'INR'
+        }
     },
     jobTypes: {
-        type: [String],
-        enum: ['full-time', 'part-time', 'contract', 'internship', 'remote'],
-        default: ['full-time'],
+        type: DataTypes.ARRAY(DataTypes.ENUM('full-time', 'part-time', 'contract', 'internship', 'remote')),
+        defaultValue: ['full-time']
     },
     experienceLevel: {
-        type: [String],
-        enum: ['entry', 'mid', 'senior', 'lead', 'executive'],
-        default: [],
+        type: DataTypes.ARRAY(DataTypes.ENUM('entry', 'mid', 'senior', 'lead', 'executive')),
+        defaultValue: []
     },
     preferredSources: {
-        type: [String],
-        enum: ['linkedin', 'indeed', 'naukri', 'unstop'],
-        default: ['linkedin', 'indeed', 'naukri'],
+        type: DataTypes.ARRAY(DataTypes.ENUM('linkedin', 'indeed', 'naukri', 'unstop')),
+        defaultValue: ['linkedin', 'indeed', 'naukri']
     },
     minMatchScore: {
-        type: Number,
-        min: 0,
-        max: 100,
-        default: 60,
+        type: DataTypes.INTEGER,
+        defaultValue: 60,
+        validate: {
+            min: 0,
+            max: 100
+        }
     },
     dailyApplicationLimit: {
-        type: Number,
-        default: 10,
+        type: DataTypes.INTEGER,
+        defaultValue: 10,
+        validate: {
+            min: 1
+        }
     },
     notificationSettings: {
-        emailAlerts: {
-            type: Boolean,
-            default: true,
-        },
-        applicationUpdates: {
-            type: Boolean,
-            default: true,
-        },
-        jobRecommendations: {
-            type: Boolean,
-            default: true,
-        },
-    },
-}, { timestamps: true });
+        type: DataTypes.JSONB,
+        defaultValue: {
+            emailAlerts: true,
+            applicationUpdates: true,
+            jobRecommendations: true
+        }
+    }
+}, {
+    tableName: 'user_preferences',
+    timestamps: true,
+    indexes: [
+        {
+            unique: true,
+            fields: ['userId']
+        }
+    ]
+});
 
-module.exports = mongoose.model('UserPreference', UserPreferenceSchema);
+module.exports = UserPreference;
