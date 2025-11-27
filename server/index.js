@@ -51,6 +51,7 @@ app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/applications', require('./routes/applications'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/debug-db', require('./routes/debug'));
 
 // API Documentation (Swagger) - Optional, requires swagger-jsdoc and swagger-ui-express
 try {
