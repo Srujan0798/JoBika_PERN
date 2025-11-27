@@ -36,10 +36,11 @@ app.use('/api/', apiLimiter);
 sequelize.authenticate()
     .then(() => {
         console.log('✅ PostgreSQL Connected (Supabase)');
-        // Optionally sync models in development
-        if (config.NODE_ENV === 'development') {
-            return sequelize.sync({ alter: false });
-        }
+
+        // Sync models in both dev and production to ensure tables exist
+        // Using alter: true to update schema without losing data
+        return sequelize.sync({ alter: true })
+            .then(() => console.log('✅ Database Synced'));
     })
     .catch(err => console.error('❌ Database Connection Error:', err));
 
