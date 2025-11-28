@@ -4,7 +4,7 @@
     "description": "JoBika Backend API",
     "main": "index.js",
     "scripts": {
-        "start": "node --dns-result-order=ipv4first index.js",
+        "start": "node start.js",
         "dev": "nodemon index.js",
         "test": "jest --setupFilesAfterEnv=./tests/setup.js",
         "test:watch": "jest --watch --setupFilesAfterEnv=./tests/setup.js",
