@@ -8,11 +8,9 @@ const path = require('path');
 router.get('/', async (req, res) => {
     let resolutionStatus = {};
     try {
-        const statusPath = path.join(__dirname, '../resolution_status.json'); // Adjust path as needed
-        // Actually start.js is in server/, debug.js is in server/routes/
-        // So ../resolution_status.json is correct if start.js writes to CWD (server/)
-        if (fs.existsSync('resolution_status.json')) {
-            resolutionStatus = JSON.parse(fs.readFileSync('resolution_status.json', 'utf8'));
+        const statusPath = '/tmp/resolution_status.json';
+        if (fs.existsSync(statusPath)) {
+            resolutionStatus = JSON.parse(fs.readFileSync(statusPath, 'utf8'));
         }
     } catch (e) {
         resolutionStatus = { error: e.message };

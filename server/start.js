@@ -3,10 +3,14 @@ const { URL } = require('url');
 const fs = require('fs');
 const { execSync } = require('child_process');
 
-const STATUS_FILE = 'resolution_status.json';
+const STATUS_FILE = '/tmp/resolution_status.json';
 
 function logStatus(status) {
-    fs.writeFileSync(STATUS_FILE, JSON.stringify(status, null, 2));
+    try {
+        fs.writeFileSync(STATUS_FILE, JSON.stringify(status, null, 2));
+    } catch (e) {
+        console.error('❌ Failed to write status file:', e.message);
+    }
 }
 
 async function start() {
