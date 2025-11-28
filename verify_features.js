@@ -32,7 +32,10 @@ async function verifyFeatures() {
                     name: 'Feature Tester'
                 })
             });
-            if (!regRes.ok) throw new Error('Registration failed');
+            if (!regRes.ok) {
+                const errText = await regRes.text();
+                throw new Error(`Registration failed: ${regRes.status} ${errText}`);
+            }
             const regData = await regRes.json();
             TOKEN = regData.token;
         } else {
